@@ -1,33 +1,43 @@
-import {Controller, Get} from '@nestjs/common';
+import {Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post} from '@nestjs/common';
 import { PostsService } from './posts.service';
 
-/**
- * author : string;
- * title : string;
- * content : string;
- * likeCount : number;
- * commentCount : number;
- */
-interface Post{
-  author : string;
-  title : string;
-  content : string;
-  likeCount : number;
-  commentCount : number;
-}
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getPost(): Post {
-    return {
-      author: 'newjeans_official',
-      title: '뉴진스 민지',
-      content: '메이크업 고치고 있는 민지',
-      likeCount: 100000,
-      commentCount: 99999,
-    };
+  getPosts() {
+    return this.postsService.getAllPosts();
   }
+
+  @Get(':id')
+  getPost(@Param('id') id: string) {
+    return this.postsService.getPostById(+id);
+  }
+
+  @Post()
+  postPosts(
+      @Body('author') author: string,
+      @Body('title') title: string,
+      @Body('content') content: string,
+  ) {
+    return this.postsService.createPost(author, title, content);
+  }
+
+  @Patch(':id')
+  putPost(
+      @Param('id') id: string,
+      @Body('author') author?: string,
+      @Body('title') title?: string,
+      @Body('content') content?: string,) {
+    return this.postsService.updatePost(+id, author, title, content);
+  }
+
+  @Delete(':id')
+  deletePost(@Param('id') id: string) {
+    return this.postsService.deletePost(+id);
+  }
+
+
 }
