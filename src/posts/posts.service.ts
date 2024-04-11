@@ -1,4 +1,7 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { PostsModel } from './entities/posts.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 /**
  * author : string;
@@ -45,67 +48,90 @@ let posts:PostModel[]=[
 
 @Injectable()
 export class PostsService {
-    getAllPosts() {
-        return posts;
+    constructor(
+      @InjectRepository(PostsModel)
+      private readonly postsRepository:Repository<PostsModel>
+    ) {}
+
+    insertInitData() {
+        for (let i = 0; i < posts.length; i++) {
+            this.postsRepository.insert(posts[i]);
+        }
     }
 
-    getPostById(id: number) {
-        const post = posts.find((post) => post.id === +id);
+    async getAllPosts() {
+        return this.postsRepository.find();
+    }
+
+    async getPostById(id: number) {
+        let post = await this.postsRepository.findOne({
+            where: {
+                id,
+            },
+        });
 
         if (!post) {
-            throw new NotFoundException();
+            throw new NotFoundException('Post not found');
         }
 
         return post;
     }
 
-    createPost(author: string, title: string, content: string) {
-        const post={
-            id: posts.length+1,
-            author: author,
-            title: title,
-            content: content,
+    async createPost(author: string, title: string, content: string) {
+        const post = this.postsRepository.create({
+            author,
+            title,
+            content,
             likeCount: 0,
-            commentCount: 0
-        }
+            commentCount: 0,
+        });
 
-        posts = [
-            ...posts,
-            post
-        ];
-
-        return post;
+        return await this.postsRepository.save(post);
     }
 
-    updatePost(postId: number, author: string, title: string, content: string) {
-        let findPost = posts.find((post) => post.id === postId);
-        if (!findPost) {
-            throw new NotFoundException();
+    async updatePost(postId: number, author: string, title: string, content: string) {
+        // save 기능
+        // 1) 만약 데이터가 존재하지 않는다면 (id 기준) 새로 생성한다
+        // 2) 만약 데이터가 존재하면 (id 기준) 존재하던 값을 업데이트 한다.
+
+        const post= await this.postsRepository.findOne({
+            where:{
+                id: postId
+            }
+        })
+
+        if (!post) {
+            throw new NotFoundException('Post not found');
         }
 
         if (author) {
-            findPost.author = author;
+            post.author = author;
         }
 
         if (title) {
-            findPost.title = title;
+            post.title = title;
         }
 
         if (content) {
-            findPost.content = content;
+            post.content = content;
         }
 
-        return findPost;
+        return await this.postsRepository.save(post);
     }
 
-    deletePost(id:number) {
-        const post = posts.find((post) => post.id === id);
+    async deletePost(id:number) {
+        const post = await this.postsRepository.findOne({
+            where: {
+                id: id,
+            },
+        });
 
         if (!post) {
-            throw new NotFoundException();
+            throw new NotFoundException('Post not found');
         }
 
-        posts = posts.filter(post => post.id !== id);
+        await this.postsRepository.delete(id);
+
         return id;
     }
 }

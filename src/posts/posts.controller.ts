@@ -25,6 +25,11 @@ export class PostsController {
     return this.postsService.createPost(author, title, content);
   }
 
+  @Post('/init')
+  initDataInsert() {
+    this.postsService.insertInitData();
+  }
+
   @Patch(':id')
   putPost(
       @Param('id') id: string,

@@ -11,12 +11,12 @@ import {PostsModel} from "./posts/entities/posts.entity";
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: '127.0.0.1',
-      port: 5555,
+      port: 5432,
       username: 'postgres',
-      password: 'postgres',
-      database: 'postgres',
+      password: 'rlagustn1!',
+      database: 'nestjs_study',
       entities: [
-          PostsModel,
+        PostsModel,
       ],
       synchronize: true,
     })
